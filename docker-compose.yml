@@ -1,0 +1,44 @@
+version: "3.7"
+
+services:
+    nginx:
+        image: nginx:1.17-alpine
+        ports:
+            - 80:80
+        volumes:
+            - ./src/backend:/var/www/backend:ro,delegated
+            - ./.docker/nginx/conf.d:/etc/nginx/conf.d:ro
+        depends_on:
+            - backend
+
+    backend:
+        build: ./src/backend
+        #diretorio de trabalho
+        working_dir: /var/www/backend
+        #espelhando o src para o dt
+        volumes:
+            - ./src/backend:/var/www/backend:delegated
+        depends_on:
+            - mysql
+    mysql:
+        image: mysql:8
+        environment:
+            MYSQL_ROOT_PASSWORD: root
+            MYSQL_DATABASE: demo
+        ports: 
+        - 3306:3306
+        volumes:
+            - ./.docker/mysql/my.cnf:/etc/mysql/conf.d/my.cnf:ro
+            - mysqldata:/var/lib/mysl:delegated
+    # Frontend Service
+    frontend:
+        build: ./src/frontend
+        working_dir: /var/www/frontend
+        volumes:
+            - ./src/frontend:/var/www/frontend:delegated
+        depends_on:
+            - backend
+
+volumes:
+  
+    mysqldata:
